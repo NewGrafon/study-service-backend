@@ -64,7 +64,7 @@ async function start() {
 
             case "linux":
                 try {
-                    execSync('systemctl start mongodb', { stdio : 'pipe' });
+                    execSync('systemctl start mongod', { stdio : 'pipe' });
                 } catch {}
                 break;
         }
