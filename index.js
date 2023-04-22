@@ -117,14 +117,18 @@ app.get('/', (req, res) => {
 app.post('/login', checkNotAuthenticated,
     passport.authenticate("local"),
     (req, res) => {
-        if (req.isAuthenticated()) {
-            res.json({
-                result: true
-            });
-        } else {
-            res.json({
-                result: false
-            });
+        try {
+            if (req.isAuthenticated()) {
+                res.json({
+                    result: true
+                });
+            } else {
+                res.json({
+                    result: false
+                });
+            }
+        } catch (e) {
+            console.error(e);
         }
     });
 
@@ -153,6 +157,7 @@ app.post('/registration', checkNotAuthenticated, async (req, res) => {
            });
        }
     } catch (e) {
+        console.error(e);
         return res.json({
             exist: false,
             result: false
