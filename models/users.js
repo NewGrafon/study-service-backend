@@ -1,5 +1,8 @@
-const mongoose = require('mongoose');
-const passportLocalMongoose = require('passport-local-mongoose');
+const mongoose = require("mongoose"),
+    ObjectId = mongoose.Schema.Types.ObjectId,
+    PassportLocalStrategy = require('passport-local').Strategy;
+
+const passportLocalMongoose = require("passport-local-mongoose");
 
 const users = new mongoose.Schema({
     firstname: {
