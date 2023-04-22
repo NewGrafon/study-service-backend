@@ -16,7 +16,9 @@ const   fs = require('fs'),
         initializePassport = require("./passport-config.js"),
         session = require('express-session'),
         mongoStore = require('connect-mongo'),
-        methodOverride = require('method-override');
+        methodOverride = require('method-override'),
+        MongoServerIP = process.env.MONGO_SERVER_IP || '127.0.0.1',
+        MongoURL = `mongodb://${MongoServerIP}:27017/study-service`;
 
 
 
@@ -28,7 +30,7 @@ app.set('trust proxy', true);
 
 app.use(session({
     store: mongoStore.create({
-        mongoUrl: "mongodb://127.0.0.1:27017/study-service",
+        mongoUrl: MongoURL,
         ttl: 60 * 60 * 24 * 1
     }),
     secret: 'SECRET_WORD',
@@ -78,7 +80,7 @@ async function start() {
         }
 
         mongoose.set('strictQuery', false);
-        await mongoose.connect(`mongodb://127.0.0.1:27017/study-service`, {
+        await mongoose.connect(MongoURL, {
             autoIndex: false,
             useNewUrlParser: true,
             useUnifiedTopology: true
