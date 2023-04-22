@@ -135,14 +135,16 @@ app.post('/registration', checkNotAuthenticated, async (req, res) => {
                 result: false
             });
         } else {
-            const HashedPassword = await bcrypt.hash(body.password, 12, () => {});
+            console.log(body.password)
+            let hashedPassword = await bcrypt.hashSync(body.password, 12);
 
+            console.log(hashedPassword)
             const user = await new users({
                 firstname: body.firstname,
                 middlename: body.middlename,
                 lastname: body.lastname,
                 email: body.email,
-                password: HashedPassword,
+                password: hashedPassword,
                 accountType: 0,
                 created: Date.now()
             });
