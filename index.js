@@ -70,11 +70,11 @@ async function start() {
                 } catch {}
                 break;
 
-            case "linux":
-                try {
-                    execSync('systemctl restart mongod', { stdio : 'pipe' });
-                } catch {}
-                break;
+            // case "linux":
+            //     try {
+            //         execSync('systemctl restart mongod', { stdio : 'pipe' });
+            //     } catch {}
+            //     break;
         }
 
         mongoose.set('strictQuery', false);
