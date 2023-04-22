@@ -2,27 +2,26 @@
 /* ИМПОРТЫ И ИХ ИНИЦИАЛИЗАЦИЯ */
 /* ////////////////////////// */
 
-const   fs = require('fs'),
-        express = require('express'),
-        app = express(),
-        mongoose = require("mongoose"),
-        execSync = require("child_process").execSync;
-        path = require('path'),
-        passport = require("passport"),
-        users = require("./models/users"),
-        bodyParser = require("body-parser"),
-        multerConfig = require("./multer-config"),
-        bcrypt = require("bcrypt"),
-        initializePassport = require("./passport-config.js"),
-        session = require('express-session'),
-        mongoStore = require('connect-mongo'),
-        methodOverride = require('method-override'),
-        MongoServerIP = process.env.MONGO_SERVER_IP || '127.0.0.1',
-        MongoURL = `mongodb://${MongoServerIP}:27017/study-service`;
+const fs = require('fs'),
+    express = require('express'),
+    app = express(),
+    mongoose = require("mongoose"),
+    execSync = require("child_process").execSync,
+    path = require('path'),
+    passport = require("passport"),
+    users = require("./models/users"),
+    bodyParser = require("body-parser"),
+    multerConfig = require("./multer-config"),
+    bcrypt = require("bcrypt"),
+    initializePassport = require("./passport-config.js"),
+    session = require('express-session'),
+    mongoStore = require('connect-mongo'),
+    methodOverride = require('method-override'),
+    MongoServerIP = process.env.MONGO_SERVER_IP || '127.0.0.1',
+    MongoURL = `mongodb://${MongoServerIP}:27017/study-service`;
 
 
-
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({extended: true}));
 
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -52,9 +51,6 @@ initializePassport(
 app.use(methodOverride('_method'));
 
 
-
-
-
 /* ////////////////////////// */
 /* НАСТРОЙКА И ЗАПУСК СЕРВЕРА */
 /* ////////////////////////// */
@@ -68,8 +64,9 @@ async function start() {
         switch (OS) {
             case 'win32':
                 try {
-                    execSync('net start mongodb', { stdio : 'pipe' });
-                } catch {}
+                    execSync('net start mongodb', {stdio: 'pipe'});
+                } catch {
+                }
                 break;
 
             // case "linux":
@@ -103,15 +100,12 @@ start()
     });
 
 
-
-
-
 /* /////// */
 /* ЗАПРОСЫ */
 /* /////// */
 
 app.get('/', (req, res) => {
-    res.json({ good: true });
+    res.json({good: true});
 });
 
 app.post('/login', checkNotAuthenticated,
@@ -134,28 +128,40 @@ app.post('/login', checkNotAuthenticated,
 
 app.post('/registration', checkNotAuthenticated, async (req, res) => {
     try {
-       if (await users.findOne({ email: req.body.email }))  {
-           return res.json({
-               exist: true,
-               result: false
-           });
-       } else {
-           const HashedPassword = await bcrypt.hash(req.body.password, 12);
-           await new users({
-               firstname: req.body.firstname,
-               middlename: req.body.middlename,
-               lastname: req.body.lastname,
-               email: req.body.email,
-               password: HashedPassword,
-               accountType: 0,
-               created: Date.now()
-           }).save();
+        const body = await req.body;
+        if ( await users.findOne({ email: body.email }) ) {
+            return res.json({
+                exist: true,
+                result: false
+            });
+        } else {
+            const HashedPassword = await bcrypt.hash(body.password, 12, () => {});
 
-           return res.json({
-               exist: false,
-               result: true
-           });
-       }
+            const user = await new users({
+                firstname: body.firstname,
+                middlename: body.middlename,
+                lastname: body.lastname,
+                email: body.email,
+                password: HashedPassword,
+                accountType: 0,
+                created: Date.now()
+            });
+
+            user.save()
+                .then(() => {
+                    return res.json({
+                        exist: false,
+                        result: true
+                    });
+                })
+                .catch((e) => {
+                    console.error(e);
+                    return res.json({
+                        exist: false,
+                        result: false
+                    });
+                });
+        }
     } catch (e) {
         console.error(e);
         return res.json({
@@ -164,9 +170,6 @@ app.post('/registration', checkNotAuthenticated, async (req, res) => {
         });
     }
 });
-
-
-
 
 
 /* /////// */
