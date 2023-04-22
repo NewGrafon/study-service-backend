@@ -134,7 +134,7 @@ app.post('/login', checkNotAuthenticated,
 
 app.post('/registration', checkNotAuthenticated, async (req, res) => {
     try {
-       if (users.findOne({ email: req.body.email }))  {
+       if (await users.findOne({ email: req.body.email }))  {
            return res.json({
                exist: true,
                result: false
