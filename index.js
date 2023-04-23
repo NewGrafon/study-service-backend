@@ -53,6 +53,7 @@ app.use(methodOverride('_method'));
 
 /* ////////////////////////// */
 /* НАСТРОЙКА И ЗАПУСК СЕРВЕРА */
+
 /* ////////////////////////// */
 
 async function start() {
@@ -100,6 +101,9 @@ start()
     });
 
 
+
+
+
 /* /////// */
 /* ЗАПРОСЫ */
 /* /////// */
@@ -110,26 +114,24 @@ app.get('/', (req, res) => {
 
 app.post('/login', checkNotAuthenticated,
     passport.authenticate("local"),
-    (req, res) => {
-        try {
+    async (req, res) => {
+        await RequestTryCatch(req, res, async () => {
             if (req.isAuthenticated()) {
-                res.json({
+                return res.json({
                     result: true
                 });
             } else {
-                res.json({
+                return res.json({
                     result: false
                 });
             }
-        } catch (e) {
-            console.error(e);
-        }
+        });
     });
 
 app.post('/registration', checkNotAuthenticated, async (req, res) => {
     try {
         const body = await req.body;
-        if ( await users.findOne({ email: body.email }) ) {
+        if (await users.findOne({email: body.email})) {
             return res.json({
                 exist: true,
                 result: false
@@ -173,10 +175,46 @@ app.post('/registration', checkNotAuthenticated, async (req, res) => {
     }
 });
 
+app.get('/get_account_info', checkAuthenticated, async (req, res) => {
+   await RequestTryCatch(req, res, async () => {
+       return res.json(await req.clone());
+   });
+});
+
+app.get('/get_teachers', async (req, res) => {
+    await RequestTryCatch(req, res, async () => {
+        const teachers = await users
+            .find({
+                accountType: 1
+            })
+            .project({
+                firstname: 1,
+                middlename: 1,
+                lastname: 1,
+                teacherInfo: 1
+            });
+
+        return res.json(teachers);
+    })
+});
+
+
+
+
 
 /* /////// */
 /* ФУНКЦИИ */
 /* /////// */
+
+async function RequestTryCatch(req, res, cb = async () => {
+}) {
+    try {
+        await cb();
+    } catch (e) {
+        console.error(e);
+        return res.json({error: 'Произошла ошибка при выполнении запроса.'});
+    }
+}
 
 async function checkNotAuthenticated(req, res, next) {
     if (req.isAuthenticated()) {

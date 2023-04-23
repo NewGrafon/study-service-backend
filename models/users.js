@@ -33,6 +33,10 @@ const users = new mongoose.Schema({
         unique: false,
         default: 0
     },
+    teacherInfo: {
+        type: Object,
+        default: {}
+    },
     created: {
         type: Date,
         required: true,
