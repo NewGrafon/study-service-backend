@@ -186,8 +186,8 @@ app.get('/get_teachers', async (req, res) => {
         const teachers = await users
             .find({
                 accountType: 1
-            })
-            .project({
+            }, {
+                _id: 1,
                 firstname: 1,
                 middlename: 1,
                 lastname: 1,
