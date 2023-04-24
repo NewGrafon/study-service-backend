@@ -177,7 +177,7 @@ app.post('/registration', checkNotAuthenticated, async (req, res) => {
 
 app.get('/get_account_info', checkAuthenticated, async (req, res) => {
    await RequestTryCatch(req, res, async () => {
-       return res.json(await req.clone());
+       return res.json(await getUser(req, res));
    });
 });
 
