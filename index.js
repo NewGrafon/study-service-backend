@@ -177,7 +177,7 @@ app.post('/registration', checkNotAuthenticated, async (req, res) => {
 
 app.get('/is_authenticated', (req, res) => {
     res.json({ result: req.isAuthenticated() });
-})
+});
 
 app.get('/get_account_info', checkAuthenticated, async (req, res) => {
    await RequestTryCatch(req, res, async () => {
