@@ -175,9 +175,13 @@ app.post('/registration', checkNotAuthenticated, async (req, res) => {
     }
 });
 
-app.get('/is_authenticated', (req, res) => {
-    res.json({ result: req.isAuthenticated() });
-})
+app.get('/is_authenticated', async (req, res) => {
+    await RequestTryCatch(req, res, async () => {
+        const isLogged = await req.isAuthenticated();
+        res.json({ result: isLogged });
+    })
+
+});
 
 app.get('/get_account_info', checkAuthenticated, async (req, res) => {
    await RequestTryCatch(req, res, async () => {
