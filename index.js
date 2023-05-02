@@ -175,6 +175,10 @@ app.post('/registration', checkNotAuthenticated, async (req, res) => {
     }
 });
 
+app.get('/is_authenticated', (req, res) => {
+    res.json({ result: req.isAuthenticated() });
+})
+
 app.get('/get_account_info', checkAuthenticated, async (req, res) => {
    await RequestTryCatch(req, res, async () => {
        return res.json(await getUser(req, res));
@@ -235,6 +239,7 @@ async function checkAuthenticated(req, res, next) {
         error: 'Пользователь не авторизован.'
     });
 }
+
 
 async function getUser(req, res) {
     const user = {
