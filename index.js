@@ -21,6 +21,7 @@ const fs = require('fs'),
     MongoURL = `mongodb://${MongoServerIP}:27017/study-service`;
 
 
+app.use(express.json());
 app.use(bodyParser.urlencoded({extended: true}));
 
 app.use(express.static(path.join(__dirname, 'public')));
@@ -101,9 +102,6 @@ start()
     });
 
 
-
-
-
 /* /////// */
 /* ЗАПРОСЫ */
 /* /////// */
@@ -117,15 +115,11 @@ app.post('/login', checkNotAuthenticated,
     async (req, res) => {
         await RequestTryCatch(req, res, async () => {
             if (req.isAuthenticated()) {
-                return res.json({
-                    result: true
-                });
+                return res.json({result: true});
             } else {
-                return res.json({
-                    result: false
-                });
+                return res.json({result: false});
             }
-        });
+        })
     });
 
 app.post('/registration', checkNotAuthenticated, async (req, res) => {
@@ -137,8 +131,7 @@ app.post('/registration', checkNotAuthenticated, async (req, res) => {
                 result: false
             });
         } else {
-            console.log(req)
-            console.log(body)
+            console.log(req.body)
             let hashedPassword = await bcrypt.hashSync(body.password, 12);
 
             console.log(hashedPassword)
@@ -176,13 +169,13 @@ app.post('/registration', checkNotAuthenticated, async (req, res) => {
 });
 
 app.get('/is_authenticated', (req, res) => {
-    res.json({ result: req.isAuthenticated() });
+    res.json({result: req.isAuthenticated()});
 });
 
 app.get('/get_account_info', checkAuthenticated, async (req, res) => {
-   await RequestTryCatch(req, res, async () => {
-       return res.json(await getUser(req, res));
-   });
+    await RequestTryCatch(req, res, async () => {
+        return res.json(await getUser(req, res));
+    });
 });
 
 app.get('/get_teachers', async (req, res) => {
@@ -203,11 +196,9 @@ app.get('/get_teachers', async (req, res) => {
 });
 
 
-
-
-
 /* /////// */
 /* ФУНКЦИИ */
+
 /* /////// */
 
 async function RequestTryCatch(req, res, cb = async () => {
