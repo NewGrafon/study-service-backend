@@ -4,7 +4,7 @@
   "description": "Дипломный проект (Бэкенд, express)",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
+    "start": "node update-project.js & node index.js",
     "dev": "nodemon index.js"
   },
   "author": "Nikita Bezrukov",
