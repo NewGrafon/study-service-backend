@@ -137,7 +137,8 @@ app.post('/registration', checkNotAuthenticated, async (req, res) => {
                 result: false
             });
         } else {
-            console.log(body.password)
+            console.log(req)
+            console.log(body)
             let hashedPassword = await bcrypt.hashSync(body.password, 12);
 
             console.log(hashedPassword)
