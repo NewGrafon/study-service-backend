@@ -17,6 +17,7 @@ const fs = require('fs'),
     session = require('express-session'),
     mongoStore = require('connect-mongo'),
     methodOverride = require('method-override'),
+    frontendIP = process.env.FRONTEND_IP || 'localhost';
     MongoServerIP = process.env.MONGO_SERVER_IP || '127.0.0.1',
     MongoURL = `mongodb://${MongoServerIP}:27017/study-service`;
 
@@ -54,7 +55,6 @@ app.use(methodOverride('_method'));
 
 /* ////////////////////////// */
 /* НАСТРОЙКА И ЗАПУСК СЕРВЕРА */
-
 /* ////////////////////////// */
 
 async function start() {
@@ -110,17 +110,12 @@ app.get('/', (req, res) => {
     res.json({good: true});
 });
 
+
 app.post('/login', checkNotAuthenticated,
-    passport.authenticate("local"),
-    async (req, res) => {
-        await RequestTryCatch(req, res, async () => {
-            if (req.isAuthenticated()) {
-                return res.json({result: true});
-            } else {
-                return res.json({result: false});
-            }
-        })
-    });
+    passport.authenticate("local", {
+        successRedirect: '/api/is_authenticated',
+        failureRedirect: '/api/is_authenticated',
+    }));
 
 app.post('/registration', checkNotAuthenticated, async (req, res) => {
     try {
@@ -131,10 +126,8 @@ app.post('/registration', checkNotAuthenticated, async (req, res) => {
                 result: false
             });
         } else {
-            console.log(req.body)
             let hashedPassword = await bcrypt.hashSync(body.password, 12);
 
-            console.log(hashedPassword)
             const user = await new users({
                 firstname: body.firstname,
                 lastname: body.lastname,
@@ -168,6 +161,13 @@ app.post('/registration', checkNotAuthenticated, async (req, res) => {
     }
 });
 
+app.delete('/logout', checkAuthenticated, async (req, res) => {
+    await RequestTryCatch(req, res, async () => {
+        await req.logOut(() => {});
+        res.json({ result: true });
+    })
+})
+
 app.get('/is_authenticated', (req, res) => {
     res.json({result: req.isAuthenticated()});
 });
@@ -198,7 +198,6 @@ app.get('/get_teachers', async (req, res) => {
 
 /* /////// */
 /* ФУНКЦИИ */
-
 /* /////// */
 
 async function RequestTryCatch(req, res, cb = async () => {
@@ -236,7 +235,6 @@ async function getUser(req, res) {
     const user = {
         logged: req.isAuthenticated(),
         firstname: null,
-        middlename: null,
         lastname: null,
         email: null,
         accountType: null,
@@ -247,7 +245,6 @@ async function getUser(req, res) {
             await req.user.clone()
                 .then((data) => {
                     user.firstname = data.firstname;
-                    user.middlename = data.middlename;
                     user.lastname = data.lastname;
                     user.email = data.email;
                     user.accountType = data.accountType;
