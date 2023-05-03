@@ -143,7 +143,6 @@ app.post('/registration', checkNotAuthenticated, async (req, res) => {
             console.log(hashedPassword)
             const user = await new users({
                 firstname: body.firstname,
-                middlename: body.middlename,
                 lastname: body.lastname,
                 email: body.email,
                 password: hashedPassword,
