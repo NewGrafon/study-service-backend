@@ -10,6 +10,7 @@ const fs = require('fs'),
     path = require('path'),
     passport = require("passport"),
     users = require("./models/users"),
+    teachersRequests = require("./models/teachers-requests"),
     bodyParser = require("body-parser"),
     multerConfig = require("./multer-config"),
     bcrypt = require("bcrypt"),
@@ -18,7 +19,7 @@ const fs = require('fs'),
     mongoStore = require('connect-mongo'),
     methodOverride = require('method-override'),
     frontendIP = process.env.FRONTEND_IP || 'localhost';
-    MongoServerIP = process.env.MONGO_SERVER_IP || '127.0.0.1',
+MongoServerIP = process.env.MONGO_SERVER_IP || '127.0.0.1',
     MongoURL = `mongodb://${MongoServerIP}:27017/study-service`;
 
 
@@ -163,10 +164,11 @@ app.post('/registration', checkNotAuthenticated, async (req, res) => {
 
 app.delete('/logout', checkAuthenticated, async (req, res) => {
     await RequestTryCatch(req, res, async () => {
-        await req.logOut(() => {});
-        res.json({ result: true });
+        await req.logOut(() => {
+        });
+        res.json({result: true});
     })
-})
+});
 
 app.get('/is_authenticated', (req, res) => {
     res.json({result: req.isAuthenticated()});
@@ -193,6 +195,23 @@ app.get('/get_teachers', async (req, res) => {
 
         return res.json(teachers);
     })
+});
+
+app.post('/teacher_send_form', async (req, res) => {
+    const body = req.body;
+    const session = req.user;
+
+    const exist = await teachersRequests.findOne({ 'creator._id': session._id });
+    console.log(exist)
+    if (!exist) {
+
+
+
+        res.json({ result: true });
+
+    } else {
+        res.json({ result: false, error: 'От этого пользователя уже отправлена форма.' });
+    }
 });
 
 
