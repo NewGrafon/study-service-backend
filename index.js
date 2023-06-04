@@ -12,7 +12,6 @@ const fs = require('fs'),
     users = require("./models/users"),
     teachersRequests = require("./models/teachers-requests"),
     bodyParser = require("body-parser"),
-    multerConfig = require("./multer-config"),
     bcrypt = require("bcrypt"),
     initializePassport = require("./passport-config.js"),
     session = require('express-session'),
@@ -56,6 +55,7 @@ app.use(methodOverride('_method'));
 
 /* ////////////////////////// */
 /* НАСТРОЙКА И ЗАПУСК СЕРВЕРА */
+
 /* ////////////////////////// */
 
 async function start() {
@@ -119,7 +119,7 @@ app.post('/login', checkNotAuthenticated,
     }));
 
 app.post('/registration', checkNotAuthenticated, async (req, res) => {
-    try {
+    await RequestTryCatch(req, res, async () => {
         const body = await req.body;
         if (await users.findOne({email: body.email})) {
             return res.json({
@@ -153,13 +153,7 @@ app.post('/registration', checkNotAuthenticated, async (req, res) => {
                     });
                 });
         }
-    } catch (e) {
-        console.error(e);
-        return res.json({
-            exist: false,
-            result: false
-        });
-    }
+    });
 });
 
 app.delete('/logout', checkAuthenticated, async (req, res) => {
@@ -201,22 +195,22 @@ app.post('/teacher_send_form', async (req, res) => {
     const body = req.body;
     const session = req.user;
 
-    const exist = await teachersRequests.findOne({ 'creator._id': session._id });
+    const exist = await teachersRequests.findOne({'creator._id': session._id});
     console.log(exist)
     if (!exist) {
 
 
-
-        res.json({ result: true });
+        res.json({result: true});
 
     } else {
-        res.json({ result: false, error: 'От этого пользователя уже отправлена форма.' });
+        res.json({result: false, error: 'От этого пользователя уже отправлена форма.'});
     }
 });
 
 
 /* /////// */
 /* ФУНКЦИИ */
+
 /* /////// */
 
 async function RequestTryCatch(req, res, cb = async () => {

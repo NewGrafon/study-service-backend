@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const passportLocalMongoose = require("passport-local-mongoose");
 
-const teachersRequests = new mongoose.Schema({
+const teachersRequests= new mongoose.Schema({
     creationDate: {
         type: Date,
         required: true,

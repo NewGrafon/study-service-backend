@@ -1,16 +1,14 @@
 const mongoose = require("mongoose");
 const passportLocalMongoose = require("passport-local-mongoose");
 
-const users = new mongoose.Schema({
+const users= new mongoose.Schema({
     firstname: {
         type: String,
-        required: true,
-        unique: false
+        required: true
     },
     lastname: {
         type: String,
-        required: true,
-        unique: false
+        required: true
     },
     email: {
         type: String,
@@ -19,13 +17,11 @@ const users = new mongoose.Schema({
     },
     password: {
         type: String,
-        required: true,
-        unique: false
+        required: true
     },
     accountType: {
         type: Number,
         required: true,
-        unique: false,
         default: 0
     },
     teacherInfo: {
