@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const passportLocalMongoose = require("passport-local-mongoose");
 
 const teachersRequests= new mongoose.Schema({
-    creationDate: {
+    created: {
         type: Date,
         required: true,
         default: Date.now()
@@ -38,7 +38,7 @@ const teachersRequests= new mongoose.Schema({
             type: Array,
             default: []
         },
-        educateDirections: {
+        studyWays: {
             type: Array,
             default: []
         }

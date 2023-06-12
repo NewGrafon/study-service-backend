@@ -11,14 +11,15 @@ const fs = require('fs'),
     passport = require("passport"),
     users = require("./models/users"),
     teachersRequests = require("./models/teachers-requests"),
+    teachersConfig = require("./teachers-config.js").config,
     bodyParser = require("body-parser"),
     bcrypt = require("bcrypt"),
     initializePassport = require("./passport-config.js"),
     session = require('express-session'),
     mongoStore = require('connect-mongo'),
     methodOverride = require('method-override'),
-    frontendIP = process.env.FRONTEND_IP || 'localhost';
-MongoServerIP = process.env.MONGO_SERVER_IP || '127.0.0.1',
+    frontendIP = process.env.FRONTEND_IP || 'localhost',
+    MongoServerIP = process.env.MONGO_SERVER_IP || '127.0.0.1',
     MongoURL = `mongodb://${MongoServerIP}:27017/study-service`;
 
 
@@ -34,7 +35,7 @@ app.use(session({
         mongoUrl: MongoURL,
         ttl: 60 * 60 * 24 * 1
     }),
-    secret: 'SECRET_WORD',
+    secret: process.env.SECRET_WORD || 'SECRET_WORD',
     resave: false,
     saveUninitialized: false,
     httpOnly: true,
@@ -55,7 +56,6 @@ app.use(methodOverride('_method'));
 
 /* ////////////////////////// */
 /* НАСТРОЙКА И ЗАПУСК СЕРВЕРА */
-
 /* ////////////////////////// */
 
 async function start() {
@@ -67,7 +67,7 @@ async function start() {
         switch (OS) {
             case 'win32':
                 try {
-                    execSync('net start mongodb', {stdio: 'pipe'});
+                    execSync('net start mongodb', { stdio: 'pipe' });
                 } catch {
                 }
                 break;
@@ -138,34 +138,25 @@ app.post('/registration', checkNotAuthenticated, async (req, res) => {
                 created: Date.now()
             });
 
-            user.save()
-                .then(() => {
-                    return res.json({
-                        exist: false,
-                        result: true
-                    });
-                })
-                .catch((e) => {
-                    console.error(e);
-                    return res.json({
-                        exist: false,
-                        result: false
-                    });
-                });
+            await user.save();
+
+            return res.json({
+                exist: false,
+                result: true
+            });
         }
     });
 });
 
 app.delete('/logout', checkAuthenticated, async (req, res) => {
     await RequestTryCatch(req, res, async () => {
-        await req.logOut(() => {
-        });
+        await req.logOut(() => {});
         res.json({result: true});
     })
 });
 
 app.get('/is_authenticated', (req, res) => {
-    res.json({result: req.isAuthenticated()});
+    res.json({ result: req.isAuthenticated() });
 });
 
 app.get('/get_account_info', checkAuthenticated, async (req, res) => {
@@ -191,26 +182,87 @@ app.get('/get_teachers', async (req, res) => {
     })
 });
 
-app.post('/teacher_send_form', async (req, res) => {
-    const body = req.body;
-    const session = req.user;
+app.post('/teacher_send_form', checkAuthenticated, async (req, res) => {
+    await RequestTryCatch(req, res, async () => {
+        const body = req.body;
+        const session = await req.user;
 
-    const exist = await teachersRequests.findOne({'creator._id': session._id});
-    console.log(exist)
-    if (!exist) {
+        const exist = await teachersRequests.findOne({'creator._id': session._id});
+        if (!exist) {
+            const newForm = new teachersRequests({
+                creator: {
+                    _id: session._id,
+                    firstname: session.firstname,
+                    lastname: session.lastname
+                },
+                requestInfo: {
+                    education: body.education,
+                    educationPlace: body.educationPlace,
+                    workExperience: body.workExperience,
+                    canEducatePeoples: body.canEducatePeoples,
+                    studyWays: body.studyWays
+                }
+            });
 
-
-        res.json({result: true});
-
-    } else {
-        res.json({result: false, error: 'От этого пользователя уже отправлена форма.'});
-    }
+            newForm.save()
+                .then(() => {
+                    res.json({ result: true });
+                })
+                .catch(() => {
+                    res.json({ result: false, error: 'Произошла неизвестная ошибка.' });
+                });
+        } else {
+            res.json({ result: false, error: 'От этого пользователя уже отправлена форма.' });
+        }
+    });
 });
 
+app.get('/get_new_teachers', checkModerator, async (req, res) => {
+   await RequestTryCatch(req, res, async () => {
+       const requests = await teachersRequests.find();
+       res.json(requests);
+   })
+});
+
+app.get('/get_wanna_edit_teachers', checkModerator, async (req, res) => {
+    await RequestTryCatch(req, res, async () => {
+        // const requests = await teachersRequests.find();
+        res.json([]);
+    })
+});
+
+app.post('/accept_teacher_request', checkModerator, async (req, res) => {
+    await RequestTryCatch(req, res, async () => {
+        const _id = req.body._id;
+        const requestForm = await teachersRequests.findOne({ 'creator._id': _id });
+        users.updateOne({ _id: _id }, {
+            accountType: 1,
+            teacherInfo: requestForm.requestInfo
+        })
+            .then(() => {
+                res.json({ result: true });
+            })
+            .catch(() => {
+                res.json({ result: false, error: 'Произошла неизвестная ошибка.' });
+            });
+    });
+});
+
+app.post('/reject_teacher_request', checkModerator, async (req, res) => {
+    await RequestTryCatch(req, res, async () => {
+        const _id = req.body._id;
+        await teachersRequests.deleteOne({ 'creator._id': _id })
+            .then(() => {
+                res.json({ result: true });
+            })
+            .catch(() => {
+                res.json({ result: false, error: 'Произошла неизвестная ошибка.' });
+            });
+    });
+});
 
 /* /////// */
 /* ФУНКЦИИ */
-
 /* /////// */
 
 async function RequestTryCatch(req, res, cb = async () => {
