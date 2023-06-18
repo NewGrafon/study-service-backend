@@ -23,8 +23,8 @@ const fs = require('fs'),
     MongoURL = `mongodb://${MongoServerIP}:27017/study-service`;
 
 
-app.use(express.json());
-app.use(bodyParser.urlencoded({extended: true}));
+app.use(express.json({ limit: 16000000 }));
+app.use(bodyParser.urlencoded({extended: true, limit: 16000000}));
 
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -165,6 +165,56 @@ app.get('/get_account_info', checkAuthenticated, async (req, res) => {
     });
 });
 
+app.get('/get_profile_picture', checkAuthenticated, async (req, res) => {
+   await RequestTryCatch(req, res, async () => {
+      const user = await getUser(req, res);
+      const image = (await users.findOne({ email: user.email }, { image: 1 })).image;
+       if (image.buffer !== undefined) {
+           return res.json({
+               result: true,
+               image: image
+           });
+       } else {
+           return res.json({
+               result: false,
+               image: null
+           });
+       }
+   });
+});
+
+app.post('/change_profile_picture', checkAuthenticated, async (req, res) => {
+    await RequestTryCatch(req, res, async () => {
+        const user = await getUser(req, res);
+        const image = req.body ?? null;
+        if (image !== null && typeof image.mimetype !== undefined && typeof image.buffer !== undefined) {
+            users.findOneAndUpdate({ email: user.email }, {
+                image: {
+                    mimetype: image.mimetype,
+                    buffer: image.buffer
+                }
+            })
+                .then(() => {
+                    return res.json({
+                        result: true,
+                        error: null
+                    });
+                })
+                .catch(() => {
+                    return res.json({
+                        result: false,
+                        error: 'Произошла неизвестная ошибка!'
+                    });
+                });
+        } else {
+            return res.json({
+                result: false,
+                error: 'Изображение не соответствует требованиям!'
+            });
+        }
+    });
+});
+
 app.get('/get_teachers', async (req, res) => {
     await RequestTryCatch(req, res, async () => {
         const teachers = await users
@@ -173,13 +223,29 @@ app.get('/get_teachers', async (req, res) => {
             }, {
                 _id: 1,
                 firstname: 1,
-                middlename: 1,
                 lastname: 1,
                 teacherInfo: 1
             });
 
         return res.json(teachers);
     })
+});
+
+app.get('/get_account_picture_buffer/:id', async (req, res) => {
+    await RequestTryCatch(req, res, async () => {
+        const image = (await users.findOne({ _id: req.params.id }, { image: 1 }))?.image;
+        if (image?.buffer !== undefined) {
+            res.json({
+                result: true,
+                buffer: image.buffer
+            });
+        } else {
+            res.json({
+                result: false,
+                error: 'Изображение отсутствует!'
+            });
+        }
+    });
 });
 
 app.post('/teacher_send_form', checkAuthenticated, async (req, res) => {
@@ -199,6 +265,7 @@ app.post('/teacher_send_form', checkAuthenticated, async (req, res) => {
                     education: body.education,
                     educationPlace: body.educationPlace,
                     workExperience: body.workExperience,
+                    aboutMe: body.aboutMe,
                     canEducatePeoples: body.canEducatePeoples,
                     studyWays: body.studyWays
                 }

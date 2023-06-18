@@ -24,6 +24,10 @@ const users= new mongoose.Schema({
         required: true,
         default: 0
     },
+    image: {
+      type: Object || undefined,
+      default: undefined
+    },
     teacherInfo: {
         type: Object,
         default: {}

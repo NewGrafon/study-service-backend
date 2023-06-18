@@ -34,6 +34,9 @@ const teachersRequests= new mongoose.Schema({
         workExperience: {
             type: String
         },
+        aboutMe: {
+            type: String
+        },
         canEducatePeoples: {
             type: Array,
             default: []
