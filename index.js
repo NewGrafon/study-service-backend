@@ -306,7 +306,8 @@ app.post('/accept_teacher_request', checkModerator, async (req, res) => {
             accountType: 1,
             teacherInfo: requestForm.requestInfo
         })
-            .then(() => {
+            .then(async () => {
+                await teachersRequests.deleteOne({ 'creator._id': _id });
                 res.json({ result: true });
             })
             .catch(() => {
